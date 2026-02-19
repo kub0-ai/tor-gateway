@@ -1,0 +1,30 @@
+# Tor gateway sidecar — transparent proxy mode
+# Sidecar for blockchain pods; all pod outbound TCP is redirected here via iptables.
+
+# SOCKS5 — for applications that support explicit proxy config (BTC/DOGE use this too)
+SocksPort 0.0.0.0:9050
+
+# Control port — used for health checks and tor-control clients
+ControlPort 0.0.0.0:9051
+CookieAuthentication 0
+
+# TransPort — iptables REDIRECT sends all pod TCP output here
+TransPort 9040
+TransProxyType default
+
+# DNSPort — iptables redirects UDP/53 here for .onion resolution
+DNSPort 5353
+AutomapHostsSuffixes .onion,.exit
+AutomapHostsOnResolve 1
+
+# This is a proxy, not an exit node
+ExitPolicy reject *:*
+ExitPolicy reject6 *:*
+
+# Log to stdout (picked up by Kubernetes)
+Log notice stdout
+
+DataDirectory /var/lib/tor
+
+# Drop privileges after binding ports
+User debian-tor
