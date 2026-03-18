@@ -1,0 +1,45 @@
+# Standalone Tor SOCKS5 proxy deployment.
+# Default replicas: 0 (off). Managed via:
+#   k0 proxy tor connect    # scale to 1
+#   k0 proxy tor disconnect # scale to 0
+#   k0 proxy tor run -- curl https://ipinfo.io
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tor
+  namespace: networking
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: tor
+  template:
+    metadata:
+      labels:
+        app: tor
+    spec:
+      containers:
+        - name: tor
+          image: ghcr.io/kub0-ai/tor-gateway:latest
+          ports:
+            - containerPort: 9050
+              name: socks5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tor
+  namespace: networking
+spec:
+  selector:
+    app: tor
+  ports:
+    - port: 9050
+      targetPort: 9050
+      name: socks5
